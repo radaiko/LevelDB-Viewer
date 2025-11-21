@@ -48,7 +48,9 @@ public partial class MainWindow : Window
             var parentPath = System.IO.Path.GetDirectoryName(file.Path.LocalPath);
             if (!string.IsNullOrEmpty(parentPath))
             {
-                return await StorageProvider.TryGetFolderFromPathAsync(new System.Uri(parentPath));
+                // Ensure absolute path for Uri construction
+                var absolutePath = System.IO.Path.GetFullPath(parentPath);
+                return await StorageProvider.TryGetFolderFromPathAsync(new System.Uri(absolutePath, System.UriKind.Absolute));
             }
         }
 
