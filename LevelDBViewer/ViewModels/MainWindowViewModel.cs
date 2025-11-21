@@ -45,15 +45,23 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         // Debounce search: cancel previous filter and start new one with delay
         _filterCancellationTokenSource?.Cancel();
+        _filterCancellationTokenSource?.Dispose();
         _filterCancellationTokenSource = new CancellationTokenSource();
         var token = _filterCancellationTokenSource.Token;
         
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
-            await Task.Delay(300, token); // 300ms debounce
-            if (!token.IsCancellationRequested)
+            try
             {
-                await Dispatcher.UIThread.InvokeAsync(() => FilterEntries());
+                await Task.Delay(300, token); // 300ms debounce
+                if (!token.IsCancellationRequested)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() => FilterEntries());
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when search is cancelled, ignore
             }
         }, token);
     }
