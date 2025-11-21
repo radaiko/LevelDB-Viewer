@@ -44,49 +44,33 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task OpenDatabaseAsync()
     {
-        try
+        if (FolderPickerFunc == null)
         {
-            if (FolderPickerFunc == null)
-            {
-                StatusMessage = "Error: Folder picker not initialized";
-                return;
-            }
-
-            var folder = await FolderPickerFunc();
-            if (folder == null)
-                return;
-
-            await OpenDatabaseFromFolderAsync(folder);
+            StatusMessage = "Error: Folder picker not initialized";
+            return;
         }
-        catch (System.Exception ex)
-        {
-            StatusMessage = $"Error: {ex.Message}";
-            IsDatabaseOpen = false;
-        }
+
+        var folder = await FolderPickerFunc();
+        if (folder == null)
+            return;
+
+        await OpenDatabaseFromFolderAsync(folder);
     }
 
     [RelayCommand]
     private async Task OpenDatabaseFromFileAsync()
     {
-        try
+        if (FilePickerFunc == null)
         {
-            if (FilePickerFunc == null)
-            {
-                StatusMessage = "Error: File picker not initialized";
-                return;
-            }
-
-            var folder = await FilePickerFunc();
-            if (folder == null)
-                return;
-
-            await OpenDatabaseFromFolderAsync(folder);
+            StatusMessage = "Error: File picker not initialized";
+            return;
         }
-        catch (System.Exception ex)
-        {
-            StatusMessage = $"Error: {ex.Message}";
-            IsDatabaseOpen = false;
-        }
+
+        var folder = await FilePickerFunc();
+        if (folder == null)
+            return;
+
+        await OpenDatabaseFromFolderAsync(folder);
     }
 
     private async Task OpenDatabaseFromFolderAsync(IStorageFolder folder)
@@ -113,20 +97,8 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (System.Exception ex)
         {
             IsDatabaseOpen = false;
-            
-            // Check if this is a corruption error
-            if (ex.Message.Contains("Corruption") || ex.Message.Contains("corrupted"))
-            {
-                IsCorruptionDetected = true;
-                StatusMessage = $"Error: {ex.Message}";
-            }
-            else
-            {
-                IsCorruptionDetected = false;
-                StatusMessage = $"Error: {ex.Message}";
-            }
-            
-            throw;
+            IsCorruptionDetected = IsCorruptionError(ex);
+            StatusMessage = $"Error: {ex.Message}";
         }
     }
 
@@ -181,11 +153,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             StatusMessage = $"Repair failed: {ex.Message}";
             IsDatabaseOpen = false;
-            
-            if (ex.Message.Contains("Corruption") || ex.Message.Contains("corrupted"))
-            {
-                IsCorruptionDetected = true;
-            }
+            IsCorruptionDetected = IsCorruptionError(ex);
         }
     }
 
@@ -215,6 +183,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 FilteredEntries.Add(entry);
             }
         }
+    }
+
+    private static bool IsCorruptionError(System.Exception ex)
+    {
+        return ex.Message.Contains("Corruption", System.StringComparison.OrdinalIgnoreCase) ||
+               ex.Message.Contains("corrupted", System.StringComparison.OrdinalIgnoreCase);
     }
 
     // Properties to store picker functions from view
