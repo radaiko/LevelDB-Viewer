@@ -170,14 +170,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void FilterEntries()
     {
-        FilteredEntries.Clear();
-        
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            foreach (var entry in _allEntries)
-            {
-                FilteredEntries.Add(entry);
-            }
+            // Replace the entire collection to trigger property change notification
+            FilteredEntries = new ObservableCollection<LevelDbEntry>(_allEntries);
         }
         else
         {
@@ -189,10 +185,18 @@ public partial class MainWindowViewModel : ViewModelBase
                 e.ValueHex.ToLower().Contains(searchLower)
             );
             
-            foreach (var entry in filtered)
+            FilteredEntries = new ObservableCollection<LevelDbEntry>(filtered);
+        }
+        
+        // Diagnostic: Update status with filtered count
+        if (IsDatabaseOpen)
+        {
+            var message = $"Database opened: {LastDatabasePath} ({TotalEntries} entries)";
+            if (FilteredEntries.Count != TotalEntries)
             {
-                FilteredEntries.Add(entry);
+                message += $" - Showing {FilteredEntries.Count} filtered";
             }
+            StatusMessage = message;
         }
     }
 
