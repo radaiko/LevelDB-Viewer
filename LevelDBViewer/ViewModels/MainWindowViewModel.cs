@@ -50,26 +50,55 @@ public partial class MainWindowViewModel : ViewModelBase
             if (folder == null)
                 return;
 
-            var path = folder.Path.LocalPath;
-            StatusMessage = $"Opening database: {path}...";
-
-            await Task.Run(() =>
-            {
-                _levelDbService.OpenDatabase(path);
-                _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
-            });
-
-            IsDatabaseOpen = true;
-            TotalEntries = _allEntries.Count;
-            StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
-            
-            FilterEntries();
+            await OpenDatabaseFromFolderAsync(folder);
         }
         catch (System.Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
             IsDatabaseOpen = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task OpenDatabaseFromFileAsync()
+    {
+        try
+        {
+            if (FilePickerFunc == null)
+            {
+                StatusMessage = "Error: File picker not initialized";
+                return;
+            }
+
+            var folder = await FilePickerFunc();
+            if (folder == null)
+                return;
+
+            await OpenDatabaseFromFolderAsync(folder);
+        }
+        catch (System.Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+            IsDatabaseOpen = false;
+        }
+    }
+
+    private async Task OpenDatabaseFromFolderAsync(IStorageFolder folder)
+    {
+        var path = folder.Path.LocalPath;
+        StatusMessage = $"Opening database: {path}...";
+
+        await Task.Run(() =>
+        {
+            _levelDbService.OpenDatabase(path);
+            _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
+        });
+
+        IsDatabaseOpen = true;
+        TotalEntries = _allEntries.Count;
+        StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
+        
+        FilterEntries();
     }
 
     [RelayCommand]
@@ -112,6 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // Property to store folder picker function from view
+    // Properties to store picker functions from view
     public System.Func<Task<IStorageFolder?>>? FolderPickerFunc { get; set; }
+    public System.Func<Task<IStorageFolder?>>? FilePickerFunc { get; set; }
 }

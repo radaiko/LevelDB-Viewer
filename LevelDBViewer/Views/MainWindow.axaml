@@ -20,7 +20,11 @@
         <!-- Toolbar -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
             <Button Command="{Binding OpenDatabaseCommand}" 
-                    Content="Open Database" 
+                    Content="Open Folder" 
+                    IsEnabled="{Binding !IsDatabaseOpen}"
+                    Padding="15,8"/>
+            <Button Command="{Binding OpenDatabaseFromFileCommand}" 
+                    Content="Open File" 
                     IsEnabled="{Binding !IsDatabaseOpen}"
                     Padding="15,8"/>
             <Button Command="{Binding CloseDatabaseCommand}" 
