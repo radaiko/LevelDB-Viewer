@@ -31,6 +31,12 @@
                     Content="Close Database" 
                     IsEnabled="{Binding IsDatabaseOpen}"
                     Padding="15,8"/>
+            <Button Command="{Binding RepairDatabaseCommand}" 
+                    Content="Repair Database" 
+                    IsVisible="{Binding IsCorruptionDetected}"
+                    Padding="15,8"
+                    Background="#FF6B35"
+                    Foreground="White"/>
             <TextBlock Text="{Binding TotalEntries, StringFormat='Total Entries: {0}'}" 
                        VerticalAlignment="Center" 
                        Margin="20,0,0,0"

@@ -25,6 +25,12 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private int _totalEntries;
 
+    [ObservableProperty]
+    private bool _isCorruptionDetected;
+
+    [ObservableProperty]
+    private string _lastDatabasePath = string.Empty;
+
     private ObservableCollection<LevelDbEntry> _allEntries = new();
     
     [ObservableProperty]
@@ -86,19 +92,42 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task OpenDatabaseFromFolderAsync(IStorageFolder folder)
     {
         var path = folder.Path.LocalPath;
+        LastDatabasePath = path;
+        IsCorruptionDetected = false;
         StatusMessage = $"Opening database: {path}...";
 
-        await Task.Run(() =>
+        try
         {
-            _levelDbService.OpenDatabase(path);
-            _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
-        });
+            await Task.Run(() =>
+            {
+                _levelDbService.OpenDatabase(path);
+                _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
+            });
 
-        IsDatabaseOpen = true;
-        TotalEntries = _allEntries.Count;
-        StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
-        
-        FilterEntries();
+            IsDatabaseOpen = true;
+            TotalEntries = _allEntries.Count;
+            StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
+            
+            FilterEntries();
+        }
+        catch (System.Exception ex)
+        {
+            IsDatabaseOpen = false;
+            
+            // Check if this is a corruption error
+            if (ex.Message.Contains("Corruption") || ex.Message.Contains("corrupted"))
+            {
+                IsCorruptionDetected = true;
+                StatusMessage = $"Error: {ex.Message}";
+            }
+            else
+            {
+                IsCorruptionDetected = false;
+                StatusMessage = $"Error: {ex.Message}";
+            }
+            
+            throw;
+        }
     }
 
     [RelayCommand]
@@ -110,7 +139,54 @@ public partial class MainWindowViewModel : ViewModelBase
         IsDatabaseOpen = false;
         TotalEntries = 0;
         SearchText = string.Empty;
+        IsCorruptionDetected = false;
         StatusMessage = "Database closed";
+    }
+
+    [RelayCommand]
+    private async Task RepairDatabaseAsync()
+    {
+        if (string.IsNullOrEmpty(LastDatabasePath))
+        {
+            StatusMessage = "Error: No database path available for repair";
+            return;
+        }
+
+        try
+        {
+            StatusMessage = $"Repairing database: {LastDatabasePath}...";
+            
+            await Task.Run(() =>
+            {
+                _levelDbService.RepairDatabase(LastDatabasePath);
+            });
+
+            StatusMessage = $"Database repaired successfully. Attempting to reopen...";
+            IsCorruptionDetected = false;
+
+            // Try to open the repaired database
+            await Task.Run(() =>
+            {
+                _levelDbService.OpenDatabase(LastDatabasePath);
+                _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
+            });
+
+            IsDatabaseOpen = true;
+            TotalEntries = _allEntries.Count;
+            StatusMessage = $"Database repaired and reopened: {LastDatabasePath} ({TotalEntries} entries)";
+            
+            FilterEntries();
+        }
+        catch (System.Exception ex)
+        {
+            StatusMessage = $"Repair failed: {ex.Message}";
+            IsDatabaseOpen = false;
+            
+            if (ex.Message.Contains("Corruption") || ex.Message.Contains("corrupted"))
+            {
+                IsCorruptionDetected = true;
+            }
+        }
     }
 
     private void FilterEntries()

@@ -76,6 +76,12 @@ public class LevelDbService : IDisposable
         return true;
     }
 
+    public void RepairDatabase(string path)
+    {
+        Close();
+        DB.Repair(new Options(), path);
+    }
+
     public void Close()
     {
         _database?.Dispose();
