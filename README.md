@@ -121,6 +121,44 @@ db.Put("key1", "value1");
 db.Put("key2", "value2");
 ```
 
+## Troubleshooting
+
+### macOS: "Unable to load shared library 'leveldb.dll'"
+
+If you encounter this error on macOS, try one of these solutions:
+
+**Option 1: Run from published build**
+```bash
+cd LevelDBViewer
+dotnet publish -c Release -r osx-x64 --self-contained false
+cd bin/Release/net9.0/osx-x64/publish
+./LevelDBViewer
+```
+
+**Option 2: Run with explicit runtime**
+```bash
+cd LevelDBViewer
+dotnet run --runtime osx-x64
+```
+
+**Option 3: For Apple Silicon Macs**
+
+The LevelDB.Standard library currently only provides x64 binaries for macOS. On Apple Silicon Macs:
+- Install Rosetta 2 if not already installed: `softwareupdate --install-rosetta`
+- Use the x64 runtime as shown above
+
+**Note**: The native libraries are located in `bin/Debug/net9.0/runtimes/osx-x64/native/leveldb.dll` after building.
+
+### Linux: Missing Native Libraries
+
+If you encounter library loading issues on Linux:
+```bash
+cd LevelDBViewer
+dotnet publish -c Release -r linux-x64 --self-contained false
+cd bin/Release/net9.0/linux-x64/publish
+./LevelDBViewer
+```
+
 ## License
 
 See LICENSE file for details.
