@@ -83,12 +83,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            List<LevelDbEntry> entries = new();
+            List<LevelDbEntry> entries;
             
-            await Task.Run(() =>
+            entries = await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(path);
-                entries = _levelDbService.GetAllEntries();
+                return _levelDbService.GetAllEntries();
             });
 
             // Create ObservableCollection on UI thread
@@ -143,12 +143,12 @@ public partial class MainWindowViewModel : ViewModelBase
             IsCorruptionDetected = false;
 
             // Try to open the repaired database
-            List<LevelDbEntry> entries = new();
+            List<LevelDbEntry> entries;
             
-            await Task.Run(() =>
+            entries = await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(LastDatabasePath);
-                entries = _levelDbService.GetAllEntries();
+                return _levelDbService.GetAllEntries();
             });
 
             // Create ObservableCollection on UI thread
