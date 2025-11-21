@@ -202,9 +202,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var searchLower = SearchText.ToLower();
             filtered = _allEntries.Where(e =>
                 e.Key.ToLower().Contains(searchLower) ||
-                e.Value.ToLower().Contains(searchLower) ||
-                e.KeyHex.ToLower().Contains(searchLower) ||
-                e.ValueHex.ToLower().Contains(searchLower)
+                e.Value.ToLower().Contains(searchLower)
             );
         }
         

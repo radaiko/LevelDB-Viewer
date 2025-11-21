@@ -41,10 +41,6 @@ public class LevelDbService : IDisposable
                 Value = TryDecodeUtf8(valueBytes)
             };
             
-            // Store raw bytes for lazy hex conversion
-            entry.KeyBytes = keyBytes;
-            entry.ValueBytes = valueBytes;
-            
             entries.Add(entry);
 
             iterator.Next();
