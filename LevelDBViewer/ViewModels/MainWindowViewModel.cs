@@ -36,7 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string _lastDatabasePath = string.Empty;
 
-    private ObservableCollection<LevelDbEntry> _allEntries = new();
+    private List<LevelDbEntry> _allEntries = new();
     
     [ObservableProperty]
     private ObservableCollection<LevelDbEntry> _filteredEntries = new();
@@ -107,20 +107,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            List<LevelDbEntry> entries;
-            
-            entries = await Task.Run(() =>
+            // Load entries on background thread - keep as List (not ObservableCollection)
+            _allEntries = await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(path);
                 return _levelDbService.GetAllEntries();
             });
-
-            // Create ObservableCollection on UI thread
-            _allEntries = new ObservableCollection<LevelDbEntry>(entries);
             
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
             
+            // Create FilteredEntries collection on UI thread
             FilterEntries();
             UpdateDatabaseStatusMessage();
         }
@@ -166,17 +163,12 @@ public partial class MainWindowViewModel : ViewModelBase
             StatusMessage = $"Database repaired successfully. Attempting to reopen...";
             IsCorruptionDetected = false;
 
-            // Try to open the repaired database
-            List<LevelDbEntry> entries;
-            
-            entries = await Task.Run(() =>
+            // Try to open the repaired database - keep as List
+            _allEntries = await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(LastDatabasePath);
                 return _levelDbService.GetAllEntries();
             });
-
-            // Create ObservableCollection on UI thread
-            _allEntries = new ObservableCollection<LevelDbEntry>(entries);
             
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
@@ -199,23 +191,25 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void FilterEntries()
     {
+        IEnumerable<LevelDbEntry> filtered;
+        
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            // Replace the entire collection to trigger property change notification
-            FilteredEntries = new ObservableCollection<LevelDbEntry>(_allEntries);
+            filtered = _allEntries;
         }
         else
         {
             var searchLower = SearchText.ToLower();
-            var filtered = _allEntries.Where(e =>
+            filtered = _allEntries.Where(e =>
                 e.Key.ToLower().Contains(searchLower) ||
                 e.Value.ToLower().Contains(searchLower) ||
                 e.KeyHex.ToLower().Contains(searchLower) ||
                 e.ValueHex.ToLower().Contains(searchLower)
             );
-            
-            FilteredEntries = new ObservableCollection<LevelDbEntry>(filtered);
         }
+        
+        // Create new ObservableCollection to trigger property change notification
+        FilteredEntries = new ObservableCollection<LevelDbEntry>(filtered);
         
         // Update status when filtering
         if (IsDatabaseOpen)

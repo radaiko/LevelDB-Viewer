@@ -35,13 +35,17 @@ public class LevelDbService : IDisposable
             var keyBytes = iterator.Key();
             var valueBytes = iterator.Value();
 
-            entries.Add(new LevelDbEntry
+            var entry = new LevelDbEntry
             {
                 Key = TryDecodeUtf8(keyBytes),
-                Value = TryDecodeUtf8(valueBytes),
-                KeyHex = BitConverter.ToString(keyBytes).Replace("-", " "),
-                ValueHex = BitConverter.ToString(valueBytes).Replace("-", " ")
-            });
+                Value = TryDecodeUtf8(valueBytes)
+            };
+            
+            // Store raw bytes for lazy hex conversion
+            entry.KeyBytes = keyBytes;
+            entry.ValueBytes = valueBytes;
+            
+            entries.Add(entry);
 
             iterator.Next();
         }
