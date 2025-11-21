@@ -147,7 +147,7 @@ The LevelDB.Standard library currently only provides x64 binaries for macOS. On 
 - Install Rosetta 2 if not already installed: `softwareupdate --install-rosetta`
 - Use the x64 runtime as shown above
 
-**Note**: The native libraries are located in `bin/Debug/net9.0/runtimes/osx-x64/native/leveldb.dll` after building.
+**Note**: The native libraries are located in `bin/Debug/net9.0/runtimes/osx-x64/native/leveldb.dll` after building. Despite the `.dll` extension, this is a proper Mach-O dynamic library for macOS (the package uses `.dll` extension on all platforms for consistency).
 
 ### Linux: Missing Native Libraries
 
