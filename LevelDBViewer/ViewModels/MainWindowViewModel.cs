@@ -96,9 +96,9 @@ public partial class MainWindowViewModel : ViewModelBase
             
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
-            StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
             
             FilterEntries();
+            UpdateDatabaseStatusMessage();
         }
         catch (System.Exception ex)
         {
@@ -156,9 +156,14 @@ public partial class MainWindowViewModel : ViewModelBase
             
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
-            StatusMessage = $"Database repaired and reopened: {LastDatabasePath} ({TotalEntries} entries)";
             
             FilterEntries();
+            var message = $"Database repaired and reopened: {LastDatabasePath} ({TotalEntries} entries)";
+            if (FilteredEntries.Count != TotalEntries)
+            {
+                message += $" - Showing {FilteredEntries.Count} filtered";
+            }
+            StatusMessage = message;
         }
         catch (System.Exception ex)
         {
@@ -188,16 +193,21 @@ public partial class MainWindowViewModel : ViewModelBase
             FilteredEntries = new ObservableCollection<LevelDbEntry>(filtered);
         }
         
-        // Diagnostic: Update status with filtered count
+        // Update status when filtering
         if (IsDatabaseOpen)
         {
-            var message = $"Database opened: {LastDatabasePath} ({TotalEntries} entries)";
-            if (FilteredEntries.Count != TotalEntries)
-            {
-                message += $" - Showing {FilteredEntries.Count} filtered";
-            }
-            StatusMessage = message;
+            UpdateDatabaseStatusMessage();
         }
+    }
+
+    private void UpdateDatabaseStatusMessage()
+    {
+        var message = $"Database opened: {LastDatabasePath} ({TotalEntries} entries)";
+        if (FilteredEntries.Count != TotalEntries)
+        {
+            message += $" - Showing {FilteredEntries.Count} filtered";
+        }
+        StatusMessage = message;
     }
 
     private static bool IsCorruptionError(System.Exception ex)
