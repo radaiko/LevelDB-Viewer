@@ -70,7 +70,7 @@ public class LevelDbService : IDisposable
     {
         foreach (var c in str)
         {
-            if (c < 32 && c != '\n' && c != '\r' && c != '\t')
+            if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t')
                 return false;
         }
         return true;

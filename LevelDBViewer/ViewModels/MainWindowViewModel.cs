@@ -86,9 +86,14 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void FilterEntries()
     {
+        FilteredEntries.Clear();
+        
         if (string.IsNullOrWhiteSpace(SearchText))
         {
-            FilteredEntries = new ObservableCollection<LevelDbEntry>(_allEntries);
+            foreach (var entry in _allEntries)
+            {
+                FilteredEntries.Add(entry);
+            }
         }
         else
         {
@@ -98,9 +103,12 @@ public partial class MainWindowViewModel : ViewModelBase
                 e.Value.ToLower().Contains(searchLower) ||
                 e.KeyHex.ToLower().Contains(searchLower) ||
                 e.ValueHex.ToLower().Contains(searchLower)
-            ).ToList();
+            );
             
-            FilteredEntries = new ObservableCollection<LevelDbEntry>(filtered);
+            foreach (var entry in filtered)
+            {
+                FilteredEntries.Add(entry);
+            }
         }
     }
 
