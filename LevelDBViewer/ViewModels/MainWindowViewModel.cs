@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
@@ -82,12 +83,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            List<LevelDbEntry> entries = new();
+            
             await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(path);
-                _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
+                entries = _levelDbService.GetAllEntries();
             });
 
+            // Create ObservableCollection on UI thread
+            _allEntries = new ObservableCollection<LevelDbEntry>(entries);
+            
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
             StatusMessage = $"Database opened: {path} ({TotalEntries} entries)";
@@ -137,12 +143,17 @@ public partial class MainWindowViewModel : ViewModelBase
             IsCorruptionDetected = false;
 
             // Try to open the repaired database
+            List<LevelDbEntry> entries = new();
+            
             await Task.Run(() =>
             {
                 _levelDbService.OpenDatabase(LastDatabasePath);
-                _allEntries = new ObservableCollection<LevelDbEntry>(_levelDbService.GetAllEntries());
+                entries = _levelDbService.GetAllEntries();
             });
 
+            // Create ObservableCollection on UI thread
+            _allEntries = new ObservableCollection<LevelDbEntry>(entries);
+            
             IsDatabaseOpen = true;
             TotalEntries = _allEntries.Count;
             StatusMessage = $"Database repaired and reopened: {LastDatabasePath} ({TotalEntries} entries)";
