@@ -18,7 +18,7 @@ public class LevelDbEntry
         {
             if (_keyHex == null && _keyBytes != null)
             {
-                _keyHex = BitConverter.ToString(_keyBytes).Replace("-", " ");
+                _keyHex = BitConverter.ToString(_keyBytes).Replace('-', ' ');
             }
             return _keyHex ?? string.Empty;
         }
@@ -31,7 +31,7 @@ public class LevelDbEntry
         {
             if (_valueHex == null && _valueBytes != null)
             {
-                _valueHex = BitConverter.ToString(_valueBytes).Replace("-", " ");
+                _valueHex = BitConverter.ToString(_valueBytes).Replace('-', ' ');
             }
             return _valueHex ?? string.Empty;
         }
