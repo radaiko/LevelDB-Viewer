@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LevelDBViewer.Models;
@@ -13,6 +16,7 @@ namespace LevelDBViewer.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly LevelDbService _levelDbService = new();
+    private CancellationTokenSource? _filterCancellationTokenSource;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -39,7 +43,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value)
     {
-        FilterEntries();
+        // Debounce search: cancel previous filter and start new one with delay
+        _filterCancellationTokenSource?.Cancel();
+        _filterCancellationTokenSource = new CancellationTokenSource();
+        var token = _filterCancellationTokenSource.Token;
+        
+        Task.Run(async () =>
+        {
+            await Task.Delay(300, token); // 300ms debounce
+            if (!token.IsCancellationRequested)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => FilterEntries());
+            }
+        }, token);
     }
 
     [RelayCommand]
